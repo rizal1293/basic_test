@@ -5,12 +5,7 @@ import (
 	"strings"
 )
 
-type HeighestWord struct {
-	Word  string
-	Count int
-}
-
-type SmallestWord struct {
+type WordCounts struct {
 	Word  string
 	Count int
 }
@@ -41,10 +36,6 @@ func WordStatistic(str string) map[string]interface{} {
 
 	result := make(map[string]interface{}, 0)
 
-	chanCountOneWord := make(chan int, 0)
-	chanHighestWords := make(chan HeighestWord)
-	chanSmallestWords := make(chan SmallestWord)
-
 	for _, word := range wordList {
 		_, found := counts[word]
 		if found {
@@ -54,86 +45,51 @@ func WordStatistic(str string) map[string]interface{} {
 		}
 	}
 
-	// Number of words that only show up once
-	go func() {
-		c := 0
-		highest := HeighestWord{}
+	countOneWord := 0
+	highest := WordCounts{}
+	smallest := WordCounts{}
 
-		for word, count := range counts {
-			if count == 1 {
-				c++
+	for word, count := range counts {
+		if count == 1 {
+			countOneWord++
+		}
+
+		if highest == (WordCounts{}) {
+			highest = WordCounts{
+				Word:  word,
+				Count: count,
 			}
-
-			if highest == (HeighestWord{}) {
-				highest = HeighestWord{
+		} else {
+			if count > highest.Count {
+				highest = WordCounts{
 					Word:  word,
 					Count: count,
 				}
-			} else {
-				if count > highest.Count {
-					highest = HeighestWord{
-						Word:  word,
-						Count: count,
-					}
-				}
 			}
 		}
-		chanCountOneWord <- c
-	}()
 
-	// Word that has the highest count
-	go func() {
-		highest := HeighestWord{}
-		for word, count := range counts {
-			if highest == (HeighestWord{}) {
-				highest = HeighestWord{
+		if smallest == (WordCounts{}) {
+			smallest = WordCounts{
+				Word:  word,
+				Count: count,
+			}
+		} else {
+			if count < smallest.Count {
+				smallest = WordCounts{
 					Word:  word,
 					Count: count,
 				}
-			} else {
-				if count > highest.Count {
-					highest = HeighestWord{
-						Word:  word,
-						Count: count,
-					}
-				}
 			}
 		}
-		chanHighestWords <- highest
-	}()
-
-	// Word that has the smallest count
-	go func() {
-		smallest := SmallestWord{}
-		for word, count := range counts {
-			if smallest == (SmallestWord{}) {
-				smallest = SmallestWord{
-					Word:  word,
-					Count: count,
-				}
-			} else {
-				if count < smallest.Count {
-					smallest = SmallestWord{
-						Word:  word,
-						Count: count,
-					}
-				}
-			}
-		}
-		chanSmallestWords <- smallest
-	}()
+	}
 
 	result = map[string]interface{}{
 		"TotalWordCounts":        len(wordList),
 		"WordCountEveryWord":     counts,
-		"NumberOfWordShowUpOnce": <-chanCountOneWord,
-		"WordHighestCount":       <-chanHighestWords,
-		"WordSmallestCount":      <-chanSmallestWords,
+		"NumberOfWordShowUpOnce": countOneWord,
+		"WordHighestCount":       highest,
+		"WordSmallestCount":      smallest,
 	}
-
-	close(chanCountOneWord)
-	close(chanHighestWords)
-	close(chanSmallestWords)
 
 	return result
 }

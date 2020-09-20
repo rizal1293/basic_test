@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
 	"github.com/jedib0t/go-pretty/table"
 )
 
 type students struct {
-	StudentId int
-	Name string
+	StudentId  int
+	Name       string
 	finalScore float64
-	Grade string
-
+	Grade      string
 }
 
 func main() {
 	var count int
-	
+
 	var listStudent []students
 
 	var studentID int
@@ -43,7 +43,7 @@ func main() {
 	}
 
 	print("\n")
-	
+
 	for i := 1; i <= count; i++ {
 
 		fmt.Print("Student ID : ")
@@ -69,8 +69,8 @@ func main() {
 		if scMidTerm.Scan() {
 			resTermMid, err := strconv.ParseFloat(scMidTerm.Text(), 64)
 			if err != nil {
-					println("Mid Term Test Score be number or decimal")
-					return
+				println("Mid Term Test Score be number or decimal")
+				return
 			} else {
 				if resTermMid < 0 || resTermMid > 100 {
 					println("Mid Term Test Score min 0 and max 100")
@@ -111,19 +111,19 @@ func main() {
 				attendance = resAttedance
 			}
 		}
-	
+
 		print("\n")
 		print("=============")
 		print("\n")
 
 		finalScore := (0.2 * float64(attendance)) + (0.4 * midTermScore) + (0.4 * semsterScore)
 		grade := getGarde(finalScore)
-	
+
 		listStudent = append(listStudent, students{
-			StudentId: studentID,
-			Name: studentName,
+			StudentId:  studentID,
+			Name:       studentName,
 			finalScore: finalScore,
-			Grade: grade,
+			Grade:      grade,
 		})
 
 		if grade == "E" || grade == "D" {
@@ -134,9 +134,9 @@ func main() {
 	}
 
 	showReport(listStudent)
-	
+
 	print("\n")
-	
+
 	fmt.Printf("Number of Students \t\t: %v \n", len(listStudent))
 	fmt.Printf("Number of Passing Students \t: %v\n", passingStudents)
 	fmt.Printf("Number of Failed Students \t: %v\n", failStudents)
@@ -144,11 +144,11 @@ func main() {
 	print("\n")
 }
 
-func showReport(students []students)  {
+func showReport(students []students) {
 	t := table.NewWriter()
-    t.SetOutputMirror(os.Stdout)
+	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"No", "Student ID", "Name", "Final Score", "Grade"})
-	
+
 	for i, row := range students {
 		i++
 		t.AppendRow([]interface{}{i, row.StudentId, row.Name, row.finalScore, row.Grade})
@@ -165,7 +165,7 @@ func getGarde(finalScore float64) (grade string) {
 		grade = "C"
 	} else if finalScore >= float64(46) && finalScore <= float64(60) {
 		grade = "D"
-	} else if (finalScore >= float64(0) && finalScore <= float64(45)){
+	} else if finalScore >= float64(0) && finalScore <= float64(45) {
 		grade = "E"
 	} else {
 		grade = "final score outside the specified range"
