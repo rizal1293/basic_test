@@ -5,12 +5,14 @@ import (
 	"strings"
 )
 
-type WorldStatisticResult struct {
-	TotalWordCounts        int
-	WordCountEveryWord     map[string]int
-	NumberOfWordShowUpOnce int
-	WordHighestCount       string
-	WordSmallestCount      string
+type HeighestWord struct {
+	Word  string
+	Count int
+}
+
+type SmallestWord struct {
+	Word  string
+	Count int
 }
 
 func TitleLower(str string) string {
@@ -33,67 +35,105 @@ func TitleLower(str string) string {
 	return ""
 }
 
-func WordStatistic(str string) WorldStatisticResult {
+func WordStatistic(str string) map[string]interface{} {
 	wordList := strings.Fields(str)
 	counts := make(map[string]int)
 
-	result := WorldStatisticResult{}
+	result := make(map[string]interface{}, 0)
 
-	countOneWord := 0
+	chanCountOneWord := make(chan int, 0)
+	chanHighestWords := make(chan HeighestWord)
+	chanSmallestWords := make(chan SmallestWord)
 
 	for _, word := range wordList {
-		_, ok := counts[word]
-		if ok {
+		_, found := counts[word]
+		if found {
 			counts[word] += 1
 		} else {
 			counts[word] = 1
 		}
 	}
 
-	result.TotalWordCounts = len(wordList)
-	result.WordCountEveryWord = counts
+	// Number of words that only show up once
+	go func() {
+		c := 0
+		highest := HeighestWord{}
 
-	highestCount := 0
-	smallestCount := 0
+		for word, count := range counts {
+			if count == 1 {
+				c++
+			}
 
-	wordHighest := ""
-	wordSmallest := ""
-
-	index := 0
-
-	for word, count := range counts {
-
-		// words that only show up once
-		if count == 1 {
-			countOneWord++
+			if highest == (HeighestWord{}) {
+				highest = HeighestWord{
+					Word:  word,
+					Count: count,
+				}
+			} else {
+				if count > highest.Count {
+					highest = HeighestWord{
+						Word:  word,
+						Count: count,
+					}
+				}
+			}
 		}
+		chanCountOneWord <- c
+	}()
 
-		if index == 0 {
-			highestCount = count
-			smallestCount = count
-
-			wordHighest = word
-			wordSmallest = word
+	// Word that has the highest count
+	go func() {
+		highest := HeighestWord{}
+		for word, count := range counts {
+			if highest == (HeighestWord{}) {
+				highest = HeighestWord{
+					Word:  word,
+					Count: count,
+				}
+			} else {
+				if count > highest.Count {
+					highest = HeighestWord{
+						Word:  word,
+						Count: count,
+					}
+				}
+			}
 		}
+		chanHighestWords <- highest
+	}()
 
-		// find highest count of word
-		if count > highestCount {
-			highestCount = count
-			wordHighest = word
+	// Word that has the smallest count
+	go func() {
+		smallest := SmallestWord{}
+		for word, count := range counts {
+			if smallest == (SmallestWord{}) {
+				smallest = SmallestWord{
+					Word:  word,
+					Count: count,
+				}
+			} else {
+				if count < smallest.Count {
+					smallest = SmallestWord{
+						Word:  word,
+						Count: count,
+					}
+				}
+			}
 		}
+		chanSmallestWords <- smallest
+	}()
 
-		// find smmallest count of word
-		if count < smallestCount {
-			smallestCount = count
-			wordSmallest = word
-		}
-
-		index++
+	result = map[string]interface{}{
+		"TotalWordCounts":        len(wordList),
+		"WordCountEveryWord":     counts,
+		"NumberOfWordShowUpOnce": <-chanCountOneWord,
+		"WordHighestCount":       <-chanHighestWords,
+		"WordSmallestCount":      <-chanSmallestWords,
 	}
 
-	result.NumberOfWordShowUpOnce = countOneWord
-	result.WordHighestCount = wordHighest
-	result.WordSmallestCount = wordSmallest
+	close(chanCountOneWord)
+	close(chanHighestWords)
+	close(chanSmallestWords)
 
 	return result
 }

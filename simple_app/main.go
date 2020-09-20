@@ -7,10 +7,28 @@ import (
 
 func main() {
 
-	// fmt.Println(util.TitleLower("Lorem Ipsum Dolor Sit Amet"))
+	print("\n")
 
-	
-	article := `Go, also known as Golang,
+	fmt.Println(util.TitleLower("Lorem Ipsum Dolor Sit Amet"))
+
+	print("\n\n")
+
+	res := util.WordStatistic(getArticle())
+
+	fmt.Printf("%#v", res["TotalWordCounts"])
+	print("\n")
+	fmt.Printf("%#v", res["WordCountEveryWord"])
+	print("\n")
+	fmt.Printf("%#v", res["NumberOfWordShowUpOnce"])
+	print("\n")
+	fmt.Printf("%#v", res["WordHighestCount"])
+	print("\n")
+	fmt.Printf("%#v", res["WordSmallestCount"])
+	print("\n")
+}
+
+func getArticle() string {
+	return `Go, also known as Golang,
 			[14]
 			is a statically typed, compiled programming language designed at
 
@@ -59,8 +77,4 @@ func main() {
 			Lack
 			of support for generic programming and the verbosity of error handling in Go 1.x had drawn
 			considerable criticism.`
-
-	res := util.WordStatistic(article)
-
-	fmt.Println(res)
 }
